@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb:10.5.6
+    restart: always
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+      ]
+    ports:
+      - 23306:3306
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+    secrets:
+      - mariadb_password
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_password
+    volumes:
+      - mariadb:/var/lib/mysql
+
+secrets:
+  mariadb_password:
+    external: true
+
+volumes:
+  mariadb:

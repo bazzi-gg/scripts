@@ -1,0 +1,60 @@
+version: "3"
+
+services:
+  web2:
+    image: ghcr.io/bazzi-gg/web2:v0.2.0-build
+    logging:
+      options:
+        max-size: "1024m"
+        max-file: "1"
+    restart: always
+    environment:
+      - APP_STRAPI_URL=https://strapi.bazzi.gg
+      - APP_METADATA_URL=https://api.bazzi.gg/metadata/
+      - APP_API_SERVER_URL=https://api.bazzi.gg
+      - APP_API_KEY=
+      - APP_GOOGLE_TAG_MANAGER_ID=
+      - APP_GOOGLE_TAG_MANAGER_ENABLED=true
+      - TZ=Asia/Seoul
+      - APP_STATISTICS_SERVER_URL=https://new-hangfire.bazzi.gg
+      - SENTRY_DSN=
+
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 2
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+
+        # https-redirect middleware to redirect HTTP to HTTPS
+        # It can be re-used by other stacks in other Docker Compose files
+        - traefik.http.middlewares.https-redirect.redirectscheme.scheme=https
+        - traefik.http.middlewares.https-redirect.redirectscheme.permanent=true
+        # traefik-http set up only to use the middleware to redirect to https
+        # Uses the environment variable DOMAIN
+        - traefik.http.routers.client-http.rule=Host(`bazzi.gg`) || Host(`www.bazzi.gg`)
+        - traefik.http.routers.client-http.entrypoints=http
+        - traefik.http.routers.client-http.middlewares=https-redirect
+        # traefik-https the actual router using HTTPS
+        # Uses the environment variable DOMAIN
+        - traefik.http.routers.client-https.rule=Host(`bazzi.gg`) || Host(`www.bazzi.gg`)
+        - traefik.http.routers.client-https.middlewares=client-www-https-redirect
+        - traefik.http.routers.client-https.entrypoints=https
+        - traefik.http.routers.client-https.tls=true
+
+        - traefik.http.middlewares.client-www-https-redirect.redirectregex.regex=^https://www.bazzi.gg/(.*)
+        - traefik.http.middlewares.client-www-https-redirect.redirectregex.replacement=https://bazzi.gg/$${1}
+        - traefik.http.middlewares.client-www-https-redirect.redirectregex.permanent=true
+
+        # Use the "le" (Let's Encrypt) resolver created below
+        - traefik.http.routers.client-https.tls.certresolver=le
+        # Define the port inside of the Docker service to use
+        - traefik.http.services.client.loadbalancer.server.port=8080
+
+networks:
+  traefik-public:
+    external: true

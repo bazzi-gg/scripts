@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  track-record:
+    image: ghcr.io/bazzi-gg/track-record:v0.0.4
+    logging:
+      options:
+        max-size: "1024m"
+        max-file: "1"
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+    environment:
+      - APP_ConnectionStrings__App=
+      - APP_KartriderApiKey=e
+      - APP_Sentry__Dsn=
+      - APP_Logging__LogLevel__Default=Information
+      - APP_Logging__LogLevel__Microsoft=Warning
+      - APP_Logging__LogLevel__Microsoft.Hosting.Lifetime=Information
+      - TZ=Asia/Seoul
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  influencer-manager:
+    image: ghcr.io/bazzi-gg/influencer-manager:v0.1.0
+    logging:
+      options:
+        max-size: "1024m"
+        max-file: "1"
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+    environment:
+      - APP_ConnectionStrings__App=
+      - APP_KartriderApiKey=
+      - APP_Sentry__Dsn=
+      - APP_Logging__LogLevel__Default=Information
+      - APP_Logging__LogLevel__Microsoft=Warning
+      - APP_Logging__LogLevel__Microsoft.Hosting.Lifetime=Information
+      - TZ=Asia/Seoul
+      - APP_Manage__LoopDelay=500
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+  player-gc:
+    image: ghcr.io/bazzi-gg/player-gc:v0.0.3
+    logging:
+      options:
+        max-size: "1024m"
+        max-file: "1"
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role==manager]
+    environment:
+      - APP_ConnectionStrings__App=
+      - APP_KartriderApiKey=
+      - APP_Sentry__Dsn=
+      - APP_PlayerGC__LoopDelay=50
+      - APP_Logging__LogLevel__Default=Information
+      - APP_Logging__LogLevel__Microsoft=Warning
+      - APP_Logging__LogLevel__Microsoft.Hosting.Lifetime=Information
+      - TZ=Asia/Seoul
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
