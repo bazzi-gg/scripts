@@ -1,3 +1,3 @@
 # scripts
 
-scripts(docker-compseo, etc) used by live server
+scripts(docker-compose, etc) used by live server
